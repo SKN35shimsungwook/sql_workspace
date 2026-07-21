@@ -372,19 +372,847 @@ SELECT CONCAT(first_name, '님은 ', DATE_FORMAT(hire_date, '%Y년 %c월 %e일�
 FROM employees;
 
 
+-- 0721수업
+ 
+/*====================================================================
+일반함수
+ifnull(컬럼, 대체값) : 첫번째 인자값이 null이면 0으로 대체해서 출력한다.
+if(컬럼, 대체1, 대체2) : 컬럼의 값이 null아니면 대체1로, null이면 대체2로 출력한다. 
+nullif(표현식1, 표현식2 ) : 표현식1과 표현식2가 같으면 NULL, 다르면 표현식1로 출력한다.
+
+--대체할 값이 숫자이면 두번째 인자값에 숫자를 지정한다.
+--대체할 값이 문자이면 두번째 인자값에 문자를 지정한다.
+--대체할 값이 날짜이면 두번째 인자값에 날짜를 지정한다. 
+=======================================================================*/
+
+
+SELECT  commission_pct, ifnull(commission_pct, 0)
+FROM EMPLOYEES;
+
+SELECT  first_name, manager_id, IFNULL(CAST(manager_id AS char(3)), 'CEO')
+FROM EMPLOYEES;
+
+
+
+SELECT  commission_pct, if(commission_pct, 1, 0)
+FROM EMPLOYEES;
+
+SELECT  commission_pct, nullif(commission_pct, 0.4)
+FROM EMPLOYEES;
+
+
+
+/*================================
+case when 조건1 then 결과1
+     when 조건2 then 결과2
+     when 조건3 then 결과3
+     else 결과n
+end AS alias;
+자바에서 if-else와 비슷한 의미
+==================================*/
+-- department_id이 10이면 'ACCOUNTING', 20이면 'RESEARCH', 
+--                30이면 'SALES', 40이면 'OPERATIONS', 'OTHERS'
+
+
+SELECT first_name, department_id,
+		CASE department_id
+			WHEN 10 THEN 'ACCOUNTING' 
+			WHEN 20 THEN 'RESEARCH'
+			WHEN 30 THEN  'SALES'
+			WHEN 40 THEN  'OPERATIONS'
+			ELSE 'OTHERS'
+		END AS 'deptname'
+FROM employees;
+
+-- dayofweek(): 1일요일..7토요일
+-- 입사일을 이용해서 한글로 요일을 출력하시오
+
+SELECT first_name, hire_date,
+	CASE dayofweek(hire_date)
+		WHEN 1 THEN  '일' 
+		WHEN 2 THEN  '월'
+		WHEN 3 THEN  '화'
+		WHEN 4 THEN  '수'
+		WHEN 5 THEN  '목'
+		WHEN 6 THEN  '금'
+		WHEN 7 THEN  '토'
+	END AS '요일'
+FROM employees;
+
+-- 직급이 'PR_REP' 인 사원은 5%, 'SA_MAN'인 사원은 10%, 
+-- 'AC_MGR'인 사원은 15%, 'PU_CLERK' 인 사원은 20% 를 인상 
+
+SELECT job_id, salary,
+    CASE job_id
+        WHEN 'PR_REP' THEN  salary * 1.05
+        WHEN 'SA_MAN' THEN  salary * 1.1
+        WHEN 'AC_MGR' THEN  salary * 1.15
+        WHEN 'PU_CLERK' THEN  salary * 1.2
+        ELSE salary
+    END AS newsal
+FROM employees;
+
+
+-- 입사일에서 월이 1-3이면 '1사분기', 4-6이면 '2사분기', 
+--              7-9이면 '3사분기', 10-12이면 '4사분기'
+-- 로 처리를 하고 사원명(first_name), 
+-- 입사일(hire_date), 분기로 출력하시오.
+
+
+SELECT first_name, hire_date,
+      CASE
+          WHEN MONTH(hire_date) <= 3 THEN '1사분기'
+          WHEN MONTH(hire_date) <= 6 THEN '2사분기'
+          WHEN MONTH(hire_date) <= 9 THEN '3사분기'
+          WHEN MONTH(hire_date) <= 12 THEN '4사분기'
+      END AS '분기'
+FROM employees;
+
+
+
+
+/*=================================================
+집계함수(Aggregate Function), 그룹함수(Group Function)
+https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html#function_max
+===================================================*/
+
+-- max(컬럼) : 최대값
+SELECT max(salary)
+FROM employees;
+
+
+-- min(컬럼) : 최소값
+SELECT min(salary)
+FROM employees;
+
+-- count(컬럼) : 개수
+SELECT count(salary)
+FROM employees;
+
+SELECT count(COMMISSION_PCT)
+FROM employees;
+
+
+SELECT count(*)
+FROM employees;
+
+-- sum(컬럼) : 합계
+SELECT sum(salary)
+FROM employees;
+
+
+-- avg(컬럼) : 평균
+SELECT avg(salary)
+FROM employees;
+
+-- 집계함수와 단순컬럼을 사용하기 위해서는 단순 컬럽을 그룹화 해야한다.(group by)
+SELECT first_name. count(*)
+FROM employees;
+
+
+-- 집계함수와 단순컬럼을 사용하기 위해서는 단순 컬럽을 그룹화 해야한다.(group by)
+SELECT department_id, count(*)
+FROM EMPLOYEES 
+GROUP BY department_id;
+
+-- 50이하인 부서에 대해서 NULL이 아닌 부서별의 직원수를 출력하시오.
+SELECT department_id, count(department_id)
+FROM employees
+WHERE department_id <= 50
+GROUP BY department_id;
+
+SELECT department_id, count(*)
+FROM employees
+WHERE department_id <= 50
+GROUP BY department_id;
+
+SELECT department_id, count(employee_id)
+FROM employees
+WHERE department_id <= 50
+GROUP BY department_id;
+
+SELECT department_id, count(*)
+FROM employees
+GROUP BY department_id
+HAVING department_id <= 50
+
+
+-- 문장 순서 기억하기 
+SELECT column_name
+FROM table_name          -- ① 어디서
+WHERE column_name='value' -- ② 어떤 조건으로
+GROUP BY column_name      -- ③ 어떻게 묶어서
+
+-- 업무별(job_id) 급여합계를 출력하시오.
+SELECT job_id, sum(salary)
+FROM EMPLOYEES 
+GROUP BY job_id;
+
+-- 부서별 최소급여, 최대급여가 같지 않을때만  
+-- 부서, 부서최소급여, 부서최대급여을 부서별 오름차순으로 출력하시오.
+SELECT 
+    department_id AS 부서,
+    MIN(salary) AS 부서최소급여,
+    MAX(salary) AS 부서최대급여
+FROM employees
+GROUP BY department_id
+HAVING MIN(salary) != MAX(salary)
+ORDER BY department_id ASC;
+
+SELECT department_id, MIN(salary), MAX(salary) 
+FROM employees
+GROUP BY department_id
+HAVING MIN(salary) != MAX(salary)
+ORDER BY department_id ASC;
+
+
+/*--------------------------
+시스템 함수
+----------------------------*/
+ -- 현재 사용자와 현재 선택된 데이터베이스
+ -- user() = current_user() = dsession_user()
+ -- datebase() = schema()
+SELECT user(), database();  -- root@localhost	myxedb
+
+-- select문에서 조회된 행의 개수를 구함
+-- found_rows( )
+SELECT * FROM employees;
+SELECT found_rows();
+
+
+
+ -- 바로 앞의 INSERT, UPDATE, DELETE문에서 입력, 수정, 삭제된 행의 갯수를 구함
+ -- CREATE, DROP문은 0을 반환하고, SELECT문은 -1을 반환한다.
+ -- row_count()
+ 
+
+DELETE FROM emplpoyees
+WHERE 1=0;
+SELECT row_count();
+
+
+-- 현재 MySQL의 버전을 구한다. 
+SELECT version()
+
+
+
+/*=======================================================
+join : 여러개의 테이블에서 원하는 테이블을 추출해주는 쿼리문이다.
+모든 제품에서 공통적으로 사용되는 표준(ANSI) join이 있다.
+========================================================*/
+
+-- 1. cross조인 = carteian product(카티션 곱) 조인 : 
+--   테이블 행의 갯수만큼 출력해주는 조인이다.
+
+SELECT count(*) FROM employees; -- 107
+SELECT count(*) FROM departments; -- 27
+SELECT 107 * 27; -- 2889
+
+
+-- 이렇게 사용하면 유지보수가 힘들고 소스가 너무 쓸데 없이길어서 지정을 할 수 있음
+SELECT employees.department_id, departments.department_id,first_name
+FROM employees  	CROSS JOIN departments;
+
+
+-- 이런식으로 e로 지정하거나 d로 별칭을 지정해서 길이를 줄여서 효율적으로 소스를 구성함
+SELECT e.department_id, d.department_id,first_name
+FROM employees  e	CROSS JOIN departments d;
+
+/*
+ 2. inner join
+    가장 많이 사용되는 조인방법으로 조인 대상이 되는 두 테이블에서 공통적으로 존재하는 컬럼의 값이
+    일치되는 행을 연결하여 결과를 생성하는 방법이다.
+ */
+
+SELECT e.department_id, e.first_name, e.job_id, j.job_title
+FROM employees  e	INNER JOIN jobs j
+ON e.job_id = j.job_id;
+
+
+SELECT e.department_id, e.first_name, d.department_name
+FROM employees  e	INNER JOIN departments d
+ON e.department_id = d.department_id;
+
+SELECT e.department_id, e.first_name, e.job_id, j.job_title
+FROM employees  e	INNER JOIN jobs j
+WHERE e.job_id = j.job_id;
+
+
+
+-- employees와 departments테이블에서 사원번호(employee_id),
+-- 부서번호(department_id), 부서명(department_name)을 검색하시오.
+
+SELECT e.employee_id, d.department_id, d.department_name
+FROM employees e INNER JOIN  departments d
+ON e.department_id = d.department_id;
+
+
+SELECT e.employee_id, d.department_id, d.department_name
+FROM employees  e, departments d
+WHERE e.department_id = d.department_id;
+
+
+-- employees와 jobs테이블에서 사원번호(employee_id),
+-- 업무번호(job_id), 업무명(job_title)을 검색하시오.
+
+
+
+SELECT e.employee_id, j.job_id, j.job_title
+FROM employees e INNER JOIN  jobs j
+ON e.job_id = j.job_id;
+
+
+
+SELECT e.employee_id, j.job_id, j.job_title
+FROM employees  e, jobs j
+WHERE e.job_id = j.job_id;
+
+
+-- job_id가 'FI_MGR'인 사원이 속한
+ -- 급여(salary)의 최소값(min_salary), 최대값(max_salary)을 출력하시오. 
+SELECT e.salary, j.min_salary, j.max_salary
+FROM employees e INNER JOIN jobs j
+ON e.job_id = j.job_id
+WHERE j.job_id = 'FI_MGR';
+
+SELECT e.salary, j.min_salary, j.max_salary
+FROM employees e, jobs j
+WHERE e.job_id = j.job_id
+AND j.job_id = 'FI_MGR';
+
+-- 부서가 'Seattle'에 있는 부서에서 근무하는
+-- 직원들의  first_name, hire_date, department_name, city
+-- 출력하는 SELECT을 작성하시오.
+
+SELECT e.first_name, e.hire_date, d.department_name, l.city
+FROM employees e INNER JOIN departments d ON e.department_id = d.department_id
+				 INNER JOIN locations l   ON d.location_id = l.location_id
+WHERE l.city = 'Seattle';
+
+
+SELECT e.first_name, e.hire_date, d.department_name, l.city
+FROM employees e, departments d, locations l   
+WHERE  e.department_id = d.department_id
+	AND d.location_id = l.location_id
+	AND l.city = 'Seattle';
+
+
+
+-- 20번 부서의 이름과 그 부서에 근무하는 사원의 이름(first_name)을 출력하시오.
+
+SELECT e.first_name, d.department_id
+FROM  EMPLOYEES E INNER JOIN DEPARTMENTS D 
+		ON e.DEPARTMENT_ID 
+WHERE d.department_id = 20
+
+
+
+SELECT 
+    e.first_name, 
+    d.department_name
+FROM EMPLOYEES E 
+INNER JOIN DEPARTMENTS D 
+    ON E.department_id = D.department_id  -- ✅ 누락되었던 ON 절 추가!
+WHERE D.department_id = 20;
+
+ SELECT d.department_name, e.first_name
+ FROM departments d INNER JOIN employees e 
+ ON d.department_id = e.department_id 
+ WHERE d.department_id=20;
+ 
+ SELECT d.department_name, e.first_name
+ FROM departments d , employees e 
+ WHERE d.department_id = e.department_id 
+   AND d.department_id=20;
+
+
+-- 1400, 1500번 위치의 도시이름과 그 곳에 있는 부서의 이름을 출력하시오.  
+-- 1400, 1500번 위치 도시이름 확인
+SELECT l.location_id, l.city
+FROM locations l
+WHERE l.location_id in(1400,1500)
+
+
+
+SELECT l.city, d.department_name
+FROM locations l INNER JOIN departments d 
+ON  l.location_id = d.location_id 
+WHERE l.location_id IN(1400, 1500);
+
+SELECT l.city, d.department_name
+FROM locations l,  departments d
+WHERE  l.location_id = d.location_id
+AND l.location_id IN(1400, 1500);
+
+
+
+ 
+/*=================================================================
+3. outer join
+  한 테이블에는 데이터가 있고 다른 반대쪽에는 데이터가 없는 경우에
+  데이터가 있는 테이블의 내용을 모두 가져오는 조건이다.
+  ===============================================================*/
+
+
+--  EMPLOYEES 기준 LEFT JOIN (모든 컬럼 출력)
+-- 사원 테이블의 모든 사원 데이터가 출력됩니다. (부서가 없는 사원 포함)
+SELECT 	*
+FROM EMPLOYEES E LEFT OUTER JOIN DEPARTMENTS D 
+ON e.department_id = d.department_id;
+
+
+-- EMPLOYEES 기준 LEFT JOIN (특정 컬럼 선택)
+-- 모든 사원의 이름, 급여, 부서명을 출력합니다. (부서가 없으면 부서명은 NULL)
+SELECT 	e.FIRST_NAME, e.salary, d.DEPARTMENT_NAME 
+FROM EMPLOYEES E LEFT OUTER JOIN DEPARTMENTS D 
+ON e.department_id = d.department_id;
+
+
+-- DEPARTMENTS 기준 RIGHT JOIN (특정 컬럼 선택)
+-- 부서 테이블의 모든 부서가 출력됩니다. (소속 사원이 한 명도 없는 신설/유령 부서 포함)
+SELECT 	e.FIRST_NAME, e.salary, d.DEPARTMENT_NAME 
+FROM EMPLOYEES E RIGHT  OUTER JOIN DEPARTMENTS D 
+ON e.department_id = d.department_id; 
+
+
+-- LEFT OUTER JOIN (사원 중심):
+-- "모든 사원 들어오세요! 부서가 있는 분은 부서표찰을 달고, 없는 분은 빈 표찰(NULL)을 답니다."
+
+-- RIGHT OUTER JOIN (부서 중심):
+-- "모든 부서 들어오세요! 사원이 있는 부서는 사원 이름을 적고, 사원이 없는 부서는 이름 칸을 빈칸(NULL)으로 둡니다."
 
 
 
 
 
+/*=================================================
+4. self join
+ 하나의 테이블을 두개의 테이블로 설정해서 사용하는 조인방법이다.
+ 하나의 테이블에 같은데이터가 두개의 컬럼에 다른 목적으로 저장되여 있는 경우
+ employees, employee_id, manager_id
+====================================================*/ 
+ 
+/*사원번호    사원명     관리자번호
+10        홍길동      null
+20        김민재       10
+30        이정진       10
+40        이옥순       20 */
+
+
+
+SELECT employee_id, first_name, manager_id
+FROM EMPLOYEES E 
+WHERE  EMPLOYEE_ID = 200;  -- 200 Jennifer 101
+
+SELECT employee_id, first_name, manager_id
+FROM EMPLOYEES E 
+WHERE  EMPLOYEE_ID = 101; -- 101 Neena 100
+
+SELECT employee_id, first_name, manager_id
+FROM EMPLOYEES E 
+WHERE  EMPLOYEE_ID = 100; -- 100 Steven NULL
+
+SELECT E.EMPLOYEE_ID AS 사원번호, E.FIRST_NAME AS 사원명, 
+	   E.MANAGER_ID AS 관리자번호, M.FIRST_NAME  AS 관리자명
+FROM EMPLOYEES E INNER JOIN EMPLOYEES M
+ON E.MANAGER_ID = M.EMPLOYEE_ID 
+
+SELECT 
+    E.EMPLOYEE_ID  AS 사원번호, 
+    E.FIRST_NAME   AS 사원명, 
+    E.MANAGER_ID   AS 관리자번호, 
+    M.FIRST_NAME   AS 관리자명
+FROM EMPLOYEES E                           -- 1. [사원 명단]으로 쓸 테이블 E
+INNER JOIN EMPLOYEES M                     -- 2. [상사 명단]으로 쓸 동일 테이블 M
+    ON E.MANAGER_ID = M.EMPLOYEE_ID;
+
+
+
+
+/*-----------------------------------------------------------------------------------------
+서브쿼리(subquery)
+ 하나의 SQL문안에 포함되어 있는 또 다른 SQL문을 말한다.
+ 서브쿼리는 알려지지 않은 기준을 이용한 검색을 위해 사용한다.
+ 서브쿼리는 메인쿼리가 서브쿼리를 포함하는 종속적인 관계이다.
+ 서브쿼리는 메인쿼리의 컬럼을 모두 사용할 수 있지만 메인쿼리는 서브쿼리의 컬럼을 사용할 수 없다. 
+ 질의 결과에 서브쿼리 컬럼을 표시해야 한다면 조인방식으로 
+    변환하거나 함수, 스칼라 서브쿼리(scarar subquery)등을 사용해야 한다. 
+ 조인은 집합간의 곱(Product)의 관계이다. 
+ 
+외부 쿼리 (메인쿼리)
+ :일반 쿼리를 의미합니다.
+스칼라 서브쿼리
+ :SELECT 절에 쿼리가 사용되는 경우로, 함수처럼 레코드당 정확히 하나의 값만을 반환하는 서브쿼리입니다.
+인라인 뷰
+ :FROM 절에 사용되는 쿼리로, 원하는 데이터를 조회하여 가상의 집합을 만들어 조인을 수행하거나 가상의 집합을 다시 조회할 때 사용합니다.
+
+
+
+서브쿼리를 사용할 때 다음 사항에 주의
+  서브쿼리를 괄호로 감싸서 사용한다. 
+  서브쿼리는 단일 행(Single Row) 또는 복수 행(Multiple Row) 비교 연산자와 함께 사용 가능하다. 
+  단일 행 비교 연산자는 서브쿼리의 결과가 반드시 1건 이하이어야 하고 복수 행 비교 연산자는 서브쿼리의 결과 건수와 상관 없다. 
+  서브쿼리에서는 ORDER BY를 사용하지 못한다. 
+  ORDER BY절은 SELECT절에서 오직 한 개만 올 수 있기 때문에 ORDER BY절은 메인쿼리의 마지막 문장에 위치해야 한다.
+  
+
+서브 쿼리 사용가능한 위치
+SELECT, FROM, WHERE, HAVING,ORDER BY 
+INSERT문의 VALUES,
+UPDATE문의 SET, 
+CREATE문
+
+서브쿼리의 종류는 동작하는 방식이나 반환되는 데이터의 형태에 따라 분류할 수 있다.
+1 동작하는 방식에 따른 서브쿼리 분류
+  Un-Correlated(비연관) : 서브쿼리가 메인쿼리 컬럼을 가지고 있지 않는 형태의 서브쿼리이다.
+          메인쿼리에 값(서브쿼리가 실행된 결과)를 제공하기 위한 목적으로  주로 사용한다.
+  Correlated(연관) : 서브쿼리가 메인쿼리 칼럼을 가지고 있는 형태의 서브쿼리이다.
+          일반적으로 메인쿼리가 먼저 수행되어 읽혀진 데이터를 서브쿼리에서 조건이 맞는지 확인
+	  하고자 할 때 주로 사용된다.  (EXISTS서브쿼리는 항상 연관 서브쿼리로 사용된다. 조건을 만족하는 1건만 찾으면
+	  추가 검색을 하지 않는다.)
+2 반환되는 데이터의 형태에 따른 서브쿼리 종류
+  Single Row(단일행 서브쿼리) : 서브쿼리의 실행결과가 항상 1건 이하인 서브쿼리를 의미한다. 
+          단일행 서브쿼리는 단일 행 비교 연산자와 함께 사용된다.
+	  단일 행 비교 연산자는 =, <, <=, >, >=, <>이 있다.
+  Multi Row(다중행 서브쿼리) : 서브쿼리의 실행 결과가 여러 건인 서브쿼리를 의미한다. 
+          다중 행 서브쿼리는 다중 행 비교 연산자와 함께 사용된다. 
+	  다중 행 비교 연산자에는 in, all, any, some, exists가 있다.
+	      in : 메인쿼리의 비교조건('='연산자로 비교할 경우)이 서브쿼리의 결과 중에서
+               하나라도 일치하면 참이다.
+           any,some : 메인 쿼리의 비교 조건이 서브 쿼리의 검색 결과와 하나 이상이 일치하면
+                참이다.
+           all : 메인 쿼리의 비교 조건이 서브 쿼리의 검색 결과와 모든 값이 일치하면 참이다.
+           exists : 메인 쿼리의 비교 조건이 서브 쿼리의 결과 중에서 만족하는 값이 하나라도
+               존재하면 참이다.
+  Multi Column(다중칼럼 서브쿼리) : 서브쿼리의 실행 결과로 여러 컬럼을 반환한다.
+          메인쿼리의 조건절에 여러 컬럼을 동시에 비교할 수 있다. 
+	  서브쿼리와 메인쿼리에서 비교하고자 하는 컬럼 갯수와 컬럼의 위치가 동일해야 한다.
+--------------------------------------------------------------------------------- */   
+ -- 90 번 부서에 근무하는 Lex의 부서명을 출력하시오.  
+SELECT department_name 
+FROM departments 
+WHERE department_id = 90;
+
+-- LEX가 근무하는 부서명을 출력하시오
+SELECT department_id
+FROM EMPLOYEES 
+WHERE first_name = 'Lex';
+
+SELECT department_name 
+FROM departments 
+WHERE department_id = 90;
+
+
+SELECT d.department_name
+FROM EMPLOYEES E  INNER JOIN DEPARTMENTS D 
+ON E.DEPARTMENT_ID = D.DEPARTMENT_ID 
+WHERE  first_name = 'Lex';
+
+
+SELECT department_name 
+FROM departments 
+WHERE department_id = (
+						SELECT department_id
+						FROM EMPLOYEES 
+						WHERE first_name = 'Lex'
+					   );
+
+
+ -- 'Lex'와 동일한 업무(job_id)를 가진 사원의 이름(first_name), 
+ -- 업무명(job_title), 입사일(hire_date)을 출력하시오.
+
+SELECT e.first_name, j.job_title, e.hire_date
+FROM EMPLOYEES E INNER JOIN jobs j
+ON e.job_id = j.job_id
+WHERE e.job_id = (
+					SELECT job_id
+					FROM employees
+					WHERE first_name = 'Lex'
+					);
+
+
+-- 'IT'에 근무하는 사원이름(first_name), 부서번호을 출력하시오.
+SELECT  e.first_name, d.department_name, d.department_id
+FROM EMPLOYEES E INNER JOIN DEPARTMENTS D
+ON E.department_id = D.department_id
+WHERE d.DEPARTMENT_ID = (
+							SELECT department_id
+							FROM departments
+							WHERE department_name = 'IT'
+							);
+
+
+SELECT  first_name, department_id
+FROM EMPLOYEES 
+WHERE DEPARTMENT_ID = (SELECT department_id
+						 FROM departments
+						 WHERE department_name = "IT");
+
+
+-- 'Bruce'보다 급여를 많이 받은 사원이름(first_name), 부서명, 급여를 출력하시오.
+
+SELECT first_name, department_name, salary
+FROM EMPLOYEES 
+WHERE = deapartment_name = (SELECT department_name
+							FROM departments
+							WHERE salary > 'bruce');
+
+SELECT e.first_name, d.department_name, e.salary
+FROM EMPLOYEES e INNER JOIN departments d
+ON e.department_id = d.department_id
+WHERE salary > (SELECT salary
+				FROM EMPLOYEES 
+				WHERE FIRST_NAME = 'bruce')
+ORDER BY salary ;
+
+-- Steven와 같은 부서에서 근무하는 사원의 이름, 급여, 입사일을 출력하시오.(in)
+
+SELECT department_id
+FROM employees
+WHERE first_name = 'steven'; /*2ROW*/
+
+SELECT first_name, salary, hire_date
+FROM EMPLOYEES 
+WHERE department_id IN (SELECT department_id
+						FROM EMPLOYEES
+						WHERE first_name = 'steven');
+
+-- 부서별로 가장 급여를 많이 받는 사원이름, 부서번호, 급여를 출력하시오.(in)   
+SELECT department_id, max(salary)
+FROM EMPLOYEES 
+GROUP BY department_id;
+
+SELECT first_name, department_id, salary
+FROM EMPLOYEES 
+WHERE (department_id, salary) IN (SELECT department_id, max(salary)
+								  FROM EMPLOYEES 
+   								  GROUP BY department_id)
+ORDER BY department_id ASC;
+
+-- 30소속된 사원들 중에서 급여를 가장 받은 사원보다 더 많은 급여를 받는
+-- 사원이름, 급여, 입사일을 출력하시오. (ALL)
+-- (서브쿼리에서 max()함수를 사용하지 않는다);
+
+SELECT salary
+FROM employees
+WHERE department_id=30;
+
+SELECT first_name, salary, hire_date
+FROM EMPLOYEES 
+WHERE salary >ALL (SELECT salary
+				   FROM employees
+				   WHERE department_id=30);
 
 
 
 
 
+-- 30소속된 사원들이 받은 급여보다  높은 급여를 받는 
+-- 사원이름, 급여, 입사일을 출력하시오. (ANY)
+-- (서브쿼리에서 min()함수를 사용하지 않는다); 
+SELECT first_name, salary, hire_date
+FROM EMPLOYEES 
+WHERE salary >ANY (SELECT salary
+				   FROM employees
+				   WHERE department_id=30);
+
+-- 사원이 있는 부서만 출력하시오.
+
+
+SELECT department_id, department_name
+FROM departments; /*27Row*/
+
+SELECT DISTINCT department_id
+FROM EMPLOYEES; /*12 ROW*/
 
 
 
+SELECT department_id, department_name
+FROM DEPARTMENTS 
+WHERE department_id in(SELECT DISTINCT department_id
+					   FROM EMPLOYEES
+);
+
+
+/*-----------------------------------------------------
+ 상관관계 서브쿼리
+ : 서브쿼리에서 메인쿼리의 컬럼을 참조한다.(메인쿼리를 먼저수행한다.)
+   서브쿼리는 메인쿼리 각각의 행에 대해서 순서적으로 한번씩 실행한다.
+ <아래 쿼리 처리순서>
+ 1st : 바깥쪽 쿼리의 첫째 row에 대하여 
+ 2nd : 안쪽 쿼리에서 자신의 속해있는 부서의 MAX salary과
+       비교하여 true 이면 바깥의 컬럼값을 반환하고 , 
+       false 이면 값을 버린다. 
+ 3rd : 바깥쪽 쿼리의 두 번째 row에 대하여 마찬가지로 실행하며, 
+       이렇게 바깥쪽 쿼리의 마지막 row까지 실행한다. 
+	   
+https://www.w3resource.com/sql/subqueries/correlated-subqueries-using-aliases.php	   
+----------------------------------------------------*/    
+
+
+
+-- 부서별 최고 급여를 받는 사원을 출력하시오.
+
+SELECT department_id, max(salary)
+FROM EMPLOYEES 
+GROUP BY department_id;
+
+
+SELECT department_id, salary, first_name, hire_date
+FROM EMPLOYEES
+WHERE (DEPARTMENT_ID,salary) IN(SELECT department_id, max(salary)
+							  FROM EMPLOYEES 
+							  GROUP BY department_id)
+ORDER BY department_id ASC;
+
+
+
+
+-- 사원이 있는 부서만 출력하시오.
+SELECT department_id, department_name
+FROM departments d
+WHERE EXISTS (SELECT 1
+			  FROM EMPLOYEES e
+			  WHERE e.department_id = d.department_id);
+
+
+-- 사원이 없는 부서만 출력하시오
+SELECT department_id, department_name
+FROM departments d
+WHERE NOT EXISTS (SELECT 1
+			  FROM EMPLOYEES e
+			  WHERE e.department_id = d.department_id);
+
+-- 부서가 있는 사원의 정보를 출력하시오
+SELECT e.employee_id, e.first_name, e.department_id
+FROM EMPLOYEES  e
+WHERE  EXISTS (SELECT 1
+			  FROM DEPARTMENTS  d
+			  WHERE d.department_id = e.department_id);
+
+
+-- 부서가 없는 사원의 정보를 출력하시오
+SELECT e.employee_id, e.first_name, e.department_id
+FROM EMPLOYEES  e
+WHERE  NOT EXISTS (SELECT 1
+			  FROM DEPARTMENTS  d
+			  WHERE d.department_id = e.department_id);
+
+-- 관리자가 있는 사원의 정보를 출력하시오
+SELECT e.employee_id, e.first_name, e.manager_id
+FROM EMPLOYEES  e
+WHERE   EXISTS (SELECT 1
+			  FROM EMPLOYEES m
+			  WHERE m.employee_id = e.manager_id);
+
+SELECT e.employee_id, e.first_name,e.department_id, e.manager_id
+FROM EMPLOYEES  e
+WHERE   EXISTS (SELECT 1
+			  FROM EMPLOYEES m
+			  WHERE m.employee_id = e.manager_id);
+
+
+
+
+
+-- 관리자가 없는 사원의 정보를 출력하시오
+SELECT e.employee_id, e.first_name, e.manager_id
+FROM EMPLOYEES  e
+WHERE NOT  EXISTS (SELECT 1
+			  FROM EMPLOYEES m
+			  WHERE m.employee_id = e.manager_id);
+
+
+SELECT e.employee_id, e.first_name,e.department_id, e.manager_id
+FROM EMPLOYEES  e
+WHERE NOT EXISTS (SELECT 1
+			  FROM EMPLOYEES m
+			  WHERE m.employee_id = e.manager_id);
+
+
+
+/*==========================================================
+ WITH ROLLUP
+ 총합 또는 중간 합계가 필요할때 GROUP by 절과 함께 WITH ROLLUP문을 사용한다.
+ ===========================================================*/
+SELECT department_id, job_id, count(*) AS count
+FROM EMPLOYEES 
+group BY department_id, job_id WITH ROLLUP 
+ORDER BY department_id DESC, job_id DESC;
+
+
+/*=================================================================================
+ 그룹내 순위관련함수
+ RANK( ) OVER( ) : 특정 컬럼에 대한 순위를 구하는 함수로 동일한 값에 대해서는 동일한 순위를 준다. 
+ DENSE_RANK( ) OVER( ) : 동일한 순위를 하나의 건수로 취급한다.
+ ROW_NUMBER( ) OVER( ) : 동일한 값이라도 고유한 순위를 부여한다.
+ ===================================================================================*/
+ /*    RANK        DENSE_RANK       ROW_NUMBER
+  90    1              1                1 
+  90    1              1                2 
+  85    3              2                3
+  80    4              3                4  
+ */
+
+
+-- 1. RANK(): 공동 순위 발생 시 다음 순위를 건너뜀 (예: 1위, 1위, 3위)
+SELECT job_id, first_name, salary, RANK() OVER(ORDER BY salary DESC)
+FROM employees;
+
+
+-- 2. DENSE_RANK(): 공동 순위가 있어도 순위를 연속해서 부여 (예: 1위, 1위, 2위)
+ SELECT job_id, first_name, salary, DENSE_RANK() OVER(ORDER BY salary DESC)
+ FROM employees;
+
+
+-- 3. ROW_NUMBER(): 급여가 같아도 행마다 무조건 유일한 고유 번호 부여 (예: 1, 2, 3)
+SELECT job_id, first_name, salary, ROW_NUMBER() OVER(ORDER BY salary DESC)
+ FROM employees;
+
+-- 4 OVER() 안에 조건이 없는 경우: DB가 임의로 읽어온 순서대로 단순 행 번호 부여
+SELECT job_id, first_name, salary, ROW_NUMBER() OVER()
+ FROM employees;
+
+
+-- 급여가 가장 높은 상위 3명을 검색하시오
+SELECT  row_number() over() AS rowrun, first_name, salary
+FROM EMPLOYEES 
+order BY salary DESC
+LIMIT 3; /*개수*/
+
+
+SELECT  row_number() over(ORDER BY salary DESC) AS rowrun, first_name, salary
+FROM EMPLOYEES 
+LIMIT 3; /*개수*/
+
+SELECT  row_number() over(ORDER BY salary DESC) AS rowrun, first_name, salary
+FROM EMPLOYEES
+
+-- 급여가 가장 높은 상위 4위부터 8위까지 검색하시오
+SELECT  row_number() over(ORDER BY salary DESC) AS rowrun, first_name, salary
+FROM EMPLOYEES 
+LIMIT 4, 5; /*시작번호,개수*/
+
+SELECT  row_number() over(ORDER BY salary DESC) AS rowrun, first_name, salary
+FROM EMPLOYEES 
+LIMIT 0, 5; /*시작번호,개수*/
+
+-- 월별 입사자 수를 조회하되 입사자 수가 가장 많은 상위 3개만 출력되도록 하시오
+-- <출력: 월 입시자수>
+SELECT  month(hire_date) AS MONTH, COUNT(*) AS worker_count
+FROM EMPLOYEES
+GROUP BY month(hire_date) 
+ORDER BY  worker_count DESC
+LIMIT 3;
+
+SELECT  month(hire_date) AS 월, COUNT(*) AS 입사자수
+FROM EMPLOYEES
+GROUP BY month(hire_date) 
+ORDER BY  count(*) DESC
+LIMIT 3;
+
+
+ 
 
 
 
