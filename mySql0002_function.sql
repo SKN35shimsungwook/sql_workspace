@@ -1172,6 +1172,50 @@ SELECT job_id, first_name, salary, ROW_NUMBER() OVER(ORDER BY salary DESC)
 -- 4 OVER() 안에 조건이 없는 경우: DB가 임의로 읽어온 순서대로 단순 행 번호 부여
 SELECT job_id, first_name, salary, ROW_NUMBER() OVER()
  FROM employees;
+/*----------------------------------------------
+ 문제
+ ----------------------------------------------   */
+-- 1) EMPLOYEES 테이블에서 입사한 달(hire_date) 별로 인원수를 조회하시오 . 
+--  <출력: 월        직원수   >
+SELECT MONTH(hire_date) AS 월, COUNT(*)         AS 직원수
+FROM EMPLOYEES
+GROUP BY MONTH(hire_date);
+
+ 
+
+-- 2)각 부서에서 근무하는 직원수를 조회하는 SQL 명령어를 작성하시오. 
+-- 단, 직원수가 5명 이하인 부서 정보만 출력되어야 하며 부서정보가 없는 직원이 있다면 
+-- 부서명에 “<미배치인원>” 이라는 문자가 출력되도록 하시오. 
+-- 그리고 출력결과는 직원수가 많은 부서먼저 출력되어야 합니다.
+ 
+
+
+
+SELECT IFNULL(d.department_name, '<미배치인원>') AS 부서명, count(*) AS 직원수
+FROM EMPLOYEES e
+LEFT JOIN DEPARTMENTS d ON e.department_id = d.department_id
+GROUP BY IFNULL(department_name, '<미배치인원>')   
+HAVING 직원수 <= 5
+ORDER BY 직원수 DESC;
+
+
+ 
+
+-- 3)각 부서 이름 별로 2005년 이전에 입사한 직원들의 인원수를 조회하시오.
+-- <출력 :    부서명		입사년도	인원수  >
+SELECT 
+
+ 
+ 
+-- 4)직책(job_title)에서 'Manager'가 포함이된 사원의 이름(first_name), 직책(job_title),
+--  부서명(department_name)을 조회하시오.
+ 
+  
+-- 5)'Executive' 부서에 속에 있는 직원들의 관리자 이름을 조회하시오. 
+-- 단, 관리자가 없는 직원이 있다면 그 직원 정보도 출력결과에 포함시켜야 합니다.
+-- <출력 : 부서번호 직원명  관리자명  >
+
+SELECT  * FROM EMPLOYEES 
 
 
 -- 급여가 가장 높은 상위 3명을 검색하시오
@@ -1210,6 +1254,34 @@ FROM EMPLOYEES
 GROUP BY month(hire_date) 
 ORDER BY  count(*) DESC
 LIMIT 3;
+
+
+/*================================================================================
+ WITH 절과 CTE
+ 
+ WITH절은 CTE(Common Table Expression)를 표현하기 위한 구문으로 MySQL8.0부터  사용할 수 있다.
+ CTE는 기존의 뷰, 파생테이블, 임시 테이블 등으로 사용되던 것을 대신할 수 있다.
+ CTE는 ANSI-SQL99 표준에서 나온 것이다. 기존의 SQL ANSI-SQL92를 기준으로 한다.
+ 최근의 DBMS(DataBase Management System)는 대개 ANSI-SQL99와 호환되므로  다른 DBMS에서도 같거나
+ 비슷한 방식으로 응용한다.
+ CTE는 비재귀적(Non-Recursive) CTE와 재귀적(Recursive) CTE두 가지가 있다.
+ 
+ <비재귀적(Non-Recursive) CTE>
+ WITH CTE_테이블이름(열이름)
+ AS
+ (
+   쿼리문;
+ )
+ SELECT 열이름 FROM CTE_테이블이름;
+ ===================================================================================*/
+
+WITH deptcnt(id, total)
+AS 
+(SELECT department_id, count(*)
+FROM employees
+GROUP BY department_id)
+SELECT id, total FROM deptcnt;
+
 
 
  
